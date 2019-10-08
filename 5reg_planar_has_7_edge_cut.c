@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
         PLANE_GRAPH *dual = get_dual_graph(graph);
         if(has_seven_cycle(dual)){
             written_count++;
-            write_planar_code(graph, stdout);
+            write_planar_code(graph, stdout, written_count==1);
         }
 
         free_plane_graph(dual);
