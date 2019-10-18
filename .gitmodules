@@ -1,3 +1,6 @@
 [submodule "planegraph"]
 	path = planegraph
 	url = git@github.com:nvcleemp/planegraph_library.git
+[submodule "cprogutil"]
+	path = cprogutil
+	url = git@github.com:nvcleemp/cprogutil.git
