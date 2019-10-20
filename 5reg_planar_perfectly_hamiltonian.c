@@ -18,6 +18,8 @@ bitset fully_coloured = BS_SINGLETON(5) - 1ULL;
 
 boolean print_perfectly_hamiltonian_colouring = FALSE;
 
+boolean find_all_perfectly_hamiltonian_colourings = FALSE;
+
 void print_colouring(PLANE_GRAPH *graph){
     for (int i = 0; i < graph->nv; ++i) {
         fprintf(stdout, "%2d: ", i);
@@ -57,6 +59,8 @@ boolean complete_colouring(PLANE_GRAPH *graph){
         PG_EDGE *e = graph->first_edge[next_vertex];
         while(e->index!=-1) e = e->next; //will stop because next_vertex is not fully coloured
 
+        boolean extendable_to_perfectly_hamiltonian_colouring = FALSE;
+
         //determine possible colours
         for (int i = 0; i < 5; ++i) {
             if(!BS_CONTAINS(BS_UNION(colours_at_vertex[e->start], colours_at_vertex[e->end]),i)){
@@ -78,8 +82,14 @@ boolean complete_colouring(PLANE_GRAPH *graph){
                     }
                 }
 
-                if(colours_still_OK && complete_colouring(graph)){
-                    return TRUE;
+                if(colours_still_OK){
+                    extendable_to_perfectly_hamiltonian_colouring =
+                            complete_colouring(graph) ||
+                            extendable_to_perfectly_hamiltonian_colouring;
+                    if(!find_all_perfectly_hamiltonian_colourings &&
+                            extendable_to_perfectly_hamiltonian_colouring){
+                        return TRUE;
+                    }
                 }
 
                 //revert colour
@@ -90,7 +100,7 @@ boolean complete_colouring(PLANE_GRAPH *graph){
                 BS_REMOVE(colours_at_vertex[e->end], i);
             }
         }
-        return FALSE;
+        return extendable_to_perfectly_hamiltonian_colouring;
     }
 }
 
@@ -137,6 +147,8 @@ void help(char *name) {
     fprintf(stderr, "Valid options\n=============\n");
     fprintf(stderr, "    -p, --print\n");
     fprintf(stderr, "       Print the colours for the perfectly hamiltonian graphs.\n");
+    fprintf(stderr, "    -a, --all\n");
+    fprintf(stderr, "       Find all perfectly hamiltonian colourings.\n");
     fprintf(stderr, "    -h, --help\n");
     fprintf(stderr, "       Print this help and return.\n");
 }
@@ -153,13 +165,17 @@ int main(int argc, char *argv[]) {
     int c;
     char *name = argv[0];
     static struct option long_options[] = {
+            {"all", no_argument, NULL, 'a'},
             {"print", no_argument, NULL, 'p'},
             {"help", no_argument, NULL, 'h'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hp", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ahp", long_options, &option_index)) != -1) {
         switch (c) {
+            case 'a':
+                find_all_perfectly_hamiltonian_colourings = TRUE;
+                break;
             case 'p':
                 print_perfectly_hamiltonian_colouring = TRUE;
                 break;
