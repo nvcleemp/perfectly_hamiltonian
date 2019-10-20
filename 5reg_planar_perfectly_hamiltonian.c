@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <bitset.h>
 #include <getopt.h>
+#include <planegraphs_output.h>
 #include "planegraphs_base.h"
 #include "planegraphs_input.h"
 
@@ -145,6 +146,8 @@ void help(char *name) {
     fprintf(stderr, "Usage\n=====\n");
     fprintf(stderr, " %s [options]\n\n", name);
     fprintf(stderr, "Valid options\n=============\n");
+    fprintf(stderr, "    -f, --filter\n");
+    fprintf(stderr, "       Write the perfectly hamiltonian graphs to standard out.\n");
     fprintf(stderr, "    -p, --print\n");
     fprintf(stderr, "       Print the colours for the perfectly hamiltonian graphs.\n");
     fprintf(stderr, "    -a, --all\n");
@@ -160,21 +163,27 @@ void usage(char *name) {
 
 int main(int argc, char *argv[]) {
 
+    boolean do_filtering = FALSE;
+
     /*=========== commandline parsing ===========*/
 
     int c;
     char *name = argv[0];
     static struct option long_options[] = {
             {"all", no_argument, NULL, 'a'},
+            {"filter", no_argument, NULL, 'f'},
             {"print", no_argument, NULL, 'p'},
             {"help", no_argument, NULL, 'h'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "ahp", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "afhp", long_options, &option_index)) != -1) {
         switch (c) {
             case 'a':
                 find_all_perfectly_hamiltonian_colourings = TRUE;
+                break;
+            case 'f':
+                do_filtering = TRUE;
                 break;
             case 'p':
                 print_perfectly_hamiltonian_colouring = TRUE;
@@ -197,6 +206,7 @@ int main(int argc, char *argv[]) {
     DEFAULT_PG_INPUT_OPTIONS(options);
     PLANE_GRAPH *graph;
     int graph_count = 0;
+    int written_count = 0;
     while((graph = read_and_decode_planar_code(stdin, &options))){
         graph_count++;
         for (int i = 0; i < graph->nv; ++i) {
@@ -207,6 +217,10 @@ int main(int argc, char *argv[]) {
         }
 
         if(is_perfectly_hamiltonian(graph)){
+            if(do_filtering){
+                written_count++;
+                write_planar_code(graph, stdout, written_count==1);
+            }
             fprintf(stderr, "Graph %d is perfectly hamiltonian.\n", graph_count);
         } else {
             fprintf(stderr, "Graph %d is not perfectly hamiltonian.\n", graph_count);
