@@ -201,6 +201,18 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if(do_filtering && print_perfectly_hamiltonian_colouring){
+        fprintf(stderr, "Filtering and printing of perfectly hamiltonian colourings cannot be combined.\n");
+        fprintf(stderr, "Disabling printing of perfectly hamiltonian colourings.\n");
+        print_perfectly_hamiltonian_colouring = FALSE;
+    }
+
+    if(find_all_perfectly_hamiltonian_colourings && !print_perfectly_hamiltonian_colouring){
+        fprintf(stderr, "Finding all perfectly hamiltonian colourings is useless if they are not printed.\n");
+        fprintf(stderr, "Disabling finding all perfectly hamiltonian colourings.\n");
+        find_all_perfectly_hamiltonian_colourings = FALSE;
+    }
+
     /*=========== main loop ===========*/
 
     DEFAULT_PG_INPUT_OPTIONS(options);
