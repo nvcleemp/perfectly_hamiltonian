@@ -146,6 +146,8 @@ void help(char *name) {
     fprintf(stderr, "Usage\n=====\n");
     fprintf(stderr, " %s [options]\n\n", name);
     fprintf(stderr, "Valid options\n=============\n");
+    fprintf(stderr, "    -v, --verbose\n");
+    fprintf(stderr, "       Write extra information about each graph to standard error.\n");
     fprintf(stderr, "    -f, --filter\n");
     fprintf(stderr, "       Write the perfectly hamiltonian graphs to standard out.\n");
     fprintf(stderr, "    -p, --print\n");
@@ -164,6 +166,7 @@ void usage(char *name) {
 int main(int argc, char *argv[]) {
 
     boolean do_filtering = FALSE;
+    boolean verbose = FALSE;
 
     /*=========== commandline parsing ===========*/
 
@@ -173,11 +176,12 @@ int main(int argc, char *argv[]) {
             {"all", no_argument, NULL, 'a'},
             {"filter", no_argument, NULL, 'f'},
             {"print", no_argument, NULL, 'p'},
+            {"verbose", no_argument, NULL, 'v'},
             {"help", no_argument, NULL, 'h'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "afhp", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "afhpv", long_options, &option_index)) != -1) {
         switch (c) {
             case 'a':
                 find_all_perfectly_hamiltonian_colourings = TRUE;
@@ -187,6 +191,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'p':
                 print_perfectly_hamiltonian_colouring = TRUE;
+                break;
+            case 'v':
+                verbose = TRUE;
                 break;
             case 'h':
                 help(name);
@@ -218,6 +225,7 @@ int main(int argc, char *argv[]) {
     DEFAULT_PG_INPUT_OPTIONS(options);
     PLANE_GRAPH *graph;
     int graph_count = 0;
+    int perfect_count = 0;
     int written_count = 0;
     while((graph = read_and_decode_planar_code(stdin, &options))){
         graph_count++;
@@ -229,14 +237,21 @@ int main(int argc, char *argv[]) {
         }
 
         if(is_perfectly_hamiltonian(graph)){
+            perfect_count++;
             if(do_filtering){
                 written_count++;
                 write_planar_code(graph, stdout, written_count==1);
             }
-            fprintf(stderr, "Graph %d is perfectly hamiltonian.\n", graph_count);
+            if (verbose) {
+                fprintf(stderr, "Graph %d is perfectly hamiltonian.\n", graph_count);
+            }
         } else {
-            fprintf(stderr, "Graph %d is not perfectly hamiltonian.\n", graph_count);
+            if (verbose) {
+                fprintf(stderr, "Graph %d is not perfectly hamiltonian.\n", graph_count);
+            }
         }
         free_plane_graph(graph);
     }
+    fprintf(stderr, "Read %d graph%s.\n", graph_count, graph_count==1 ? "" : "s");
+    fprintf(stderr, "%d graph%s perfectly hamiltonian.\n", perfect_count, perfect_count==1 ? " is" : "s are");
 }
