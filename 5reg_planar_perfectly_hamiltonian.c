@@ -154,6 +154,8 @@ void help(char *name) {
     fprintf(stderr, "       Print the colours for the perfectly hamiltonian graphs.\n");
     fprintf(stderr, "    -a, --all\n");
     fprintf(stderr, "       Find all perfectly hamiltonian colourings.\n");
+    fprintf(stderr, "    -1, --first\n");
+    fprintf(stderr, "       Find all perfectly hamiltonian colourings.\n");
     fprintf(stderr, "    -h, --help\n");
     fprintf(stderr, "       Print this help and return.\n");
 }
@@ -168,6 +170,8 @@ int main(int argc, char *argv[]) {
     boolean do_filtering = FALSE;
     boolean verbose = FALSE;
 
+    boolean first = FALSE;
+
     /*=========== commandline parsing ===========*/
 
     int c;
@@ -177,12 +181,16 @@ int main(int argc, char *argv[]) {
             {"filter", no_argument, NULL, 'f'},
             {"print", no_argument, NULL, 'p'},
             {"verbose", no_argument, NULL, 'v'},
+            {"first", no_argument, NULL, '1'},
             {"help", no_argument, NULL, 'h'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "afhpv", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "1afhpv", long_options, &option_index)) != -1) {
         switch (c) {
+            case '1':
+                first = TRUE;
+                break;
             case 'a':
                 find_all_perfectly_hamiltonian_colourings = TRUE;
                 break;
@@ -244,6 +252,10 @@ int main(int argc, char *argv[]) {
             }
             if (verbose) {
                 fprintf(stderr, "Graph %d is perfectly hamiltonian.\n", graph_count);
+            }
+            if(first) {
+                fprintf(stderr, "No longer reading input graphs since we found a perfectly hamiltonian graph.\n");
+                break;
             }
         } else {
             if (verbose) {
