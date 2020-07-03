@@ -185,52 +185,6 @@ int get_components_for_1factor_pair(bitset f1, bitset f2, bitset *components){
     return component_count;
 }
 
-void write_coloured_graph(FILE *f, PLANE_GRAPH *graph, int pair_count){
-    static boolean first = TRUE;
-    int order = graph->nv + graph->ne/2 + k + 1 + pair_count + 1;
-    if(order > 253){
-        fprintf(stderr, "Graphs of that size are currently not supported -- exiting!\n");
-        return;
-    }
-    if(first){
-        fprintf(f, ">>multi_code<<");
-        first = FALSE;
-    }
-
-    PG_EDGE *e, *elast;
-
-    //write the number of vertices
-    fputc(order, f);
-
-    //write the original vertices: only adjacent to center of edges
-    int edge_center_start = graph->nv + 1;
-    for(int i=0; i<graph->nv; i++){
-        e = elast = graph->first_edge[i];
-        do {
-            fputc(edge_center_start + e->index, f);
-            e = e->next;
-        } while (e != elast);
-        fputc(0, f);
-    }
-    //write centers of edges: only remaining neighbours are colours
-    int colour_start = graph->nv + graph->ne/2 + 1;
-    for(int i=0; i<graph->ne/2; i++){
-        fputc(colour_start + edges[i]->colour, f);
-        fputc(0, f);
-    }
-    for(int i=0; i<k; i++){
-        fputc(colour_start + k, f);
-        fputc(0, f);
-    }
-    for(int i=0; i<pair_count + 1; i++){
-        fputc(colour_start + k + 1 + i, f);
-    }
-    fputc(0, f);
-    for(int i=0; i<pair_count; i++){
-        fputc(0, f);
-    }
-}
-
 void print_colouring(FILE *f, PLANE_GRAPH *graph){
     for (int i = 0; i < graph->nv; ++i) {
         fprintf(f, "%2d: ", i);
@@ -331,7 +285,6 @@ void handle_colouring(PLANE_GRAPH *graph){
         }
     }
     pair_count_count[good_pairs]++;
-    //write_coloured_graph(stdout, graph, good_pairs);
     store_current_colouring(graph, good_pairs);
 }
 
@@ -358,17 +311,6 @@ void complete_colouring(PLANE_GRAPH *graph){
                 NEIGHBOUR_ALONG_COLOUR(e->end, i) = e->start;
                 BS_ADD(colours_at_vertex[e->start], i);
                 BS_ADD(colours_at_vertex[e->end], i);
-
-                /*boolean colours_still_OK = TRUE;
-                for (int j = 0; j < k; ++j) {
-                    if(j!=i){
-                        int length = length_of_two_colour_cycle(e->end, i, j);
-                        if(length > 0 && length < graph->nv){
-                            colours_still_OK = FALSE;
-                            break;
-                        }
-                    }
-                }*/
 
                 complete_colouring(graph);
 
