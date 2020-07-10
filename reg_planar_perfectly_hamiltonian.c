@@ -6,16 +6,19 @@
 #include "planegraphs_base.h"
 #include "planegraphs_input.h"
 
+//the degree of the graph: will be set to either 3, 4, or 5
+int k;
+
 //Stores the neighbour of a vertex along a specific colour.
 //Either the label of the neighbour is stored or -1 if this colour is not
 //yet assigned at that vertex.
 //Best to address this array using the macro below.
 int *neighbour_along_colour;
-#define NEIGHBOUR_ALONG_COLOUR(v, c) neighbour_along_colour[5*(v) + c]
+#define NEIGHBOUR_ALONG_COLOUR(v, c) neighbour_along_colour[k*(v) + c]
 
 bitset *colours_at_vertex;
 
-bitset fully_coloured = BS_SINGLETON(5) - 1ULL;
+bitset fully_coloured;
 
 boolean print_perfectly_hamiltonian_colouring = FALSE;
 
@@ -24,7 +27,7 @@ boolean find_all_perfectly_hamiltonian_colourings = FALSE;
 void print_colouring(PLANE_GRAPH *graph){
     for (int i = 0; i < graph->nv; ++i) {
         fprintf(stdout, "%2d: ", i);
-        for (int j = 0; j < 5; ++j) {
+        for (int j = 0; j < k; ++j) {
             fprintf(stdout, " %2d", NEIGHBOUR_ALONG_COLOUR(i, j));
         }
         fprintf(stdout, "\n");
@@ -63,7 +66,7 @@ boolean complete_colouring(PLANE_GRAPH *graph){
         boolean extendable_to_perfectly_hamiltonian_colouring = FALSE;
 
         //determine possible colours
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < k; ++i) {
             if(!BS_CONTAINS(BS_UNION(colours_at_vertex[e->start], colours_at_vertex[e->end]),i)){
                 //assign colour
                 e->index = e->inverse->index = i;
@@ -73,7 +76,7 @@ boolean complete_colouring(PLANE_GRAPH *graph){
                 BS_ADD(colours_at_vertex[e->end], i);
 
                 boolean colours_still_OK = TRUE;
-                for (int j = 0; j < 5; ++j) {
+                for (int j = 0; j < k; ++j) {
                     if(j!=i){
                         int length = length_of_two_colour_cycle(e->end, i, j);
                         if(length > 0 && length < graph->nv){
@@ -108,11 +111,11 @@ boolean complete_colouring(PLANE_GRAPH *graph){
 boolean is_perfectly_hamiltonian(PLANE_GRAPH *graph){
     PG_EDGE *e;
 
-    neighbour_along_colour = (int *)malloc(5*graph->nv* sizeof(int));
+    neighbour_along_colour = (int *)malloc(k*graph->nv* sizeof(int));
     colours_at_vertex = (bitset *)malloc(graph->nv* sizeof(bitset));
     for (int i = 0; i < graph->nv; ++i) {
         e = graph->first_edge[i];
-        for (int j = 0; j < 5; ++j) {
+        for (int j = 0; j < k; ++j) {
             NEIGHBOUR_ALONG_COLOUR(i, j) = -1;
             e->index = -1;
             e = e->next;
@@ -122,7 +125,7 @@ boolean is_perfectly_hamiltonian(PLANE_GRAPH *graph){
 
     //colour edges at first vertex
     e = graph->first_edge[0];
-    for (unsigned int i = 0; i < 5; ++i) {
+    for (unsigned int i = 0; i < k; ++i) {
         NEIGHBOUR_ALONG_COLOUR(0, i) = e->end;
         NEIGHBOUR_ALONG_COLOUR(e->end, i) = 0;
         BS_ADD(colours_at_vertex[0], i);
@@ -142,7 +145,7 @@ boolean is_perfectly_hamiltonian(PLANE_GRAPH *graph){
 //====================== USAGE =======================
 
 void help(char *name) {
-    fprintf(stderr, "This program finds perfectly hamiltonian 5-regular plane graphs.\n\n");
+    fprintf(stderr, "This program finds perfectly hamiltonian k-regular plane graphs.\n\n");
     fprintf(stderr, "Usage\n=====\n");
     fprintf(stderr, " %s [options]\n\n", name);
     fprintf(stderr, "Valid options\n=============\n");
@@ -155,7 +158,7 @@ void help(char *name) {
     fprintf(stderr, "    -a, --all\n");
     fprintf(stderr, "       Find all perfectly hamiltonian colourings.\n");
     fprintf(stderr, "    -1, --first\n");
-    fprintf(stderr, "       Find all perfectly hamiltonian colourings.\n");
+    fprintf(stderr, "       Stop the program after the first perfectly hamiltonian graph is found.\n");
     fprintf(stderr, "    -h, --help\n");
     fprintf(stderr, "       Print this help and return.\n");
 }
@@ -166,6 +169,8 @@ void usage(char *name) {
 }
 
 int main(int argc, char *argv[]) {
+
+    const char *names[] = {"cubic", "quartic", "quintic"};
 
     boolean do_filtering = FALSE;
     boolean verbose = FALSE;
@@ -228,6 +233,20 @@ int main(int argc, char *argv[]) {
         find_all_perfectly_hamiltonian_colourings = FALSE;
     }
 
+    if (optind == argc) {
+        usage(name);
+        return EXIT_FAILURE;
+    }
+
+    k = atoi(argv[optind]);
+
+    if(k < 3 || k > 5){
+        fprintf(stderr, "k should be 3, 4, or 5 -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    fully_coloured = BS_SINGLETON(k) - 1ULL;
+
     /*=========== main loop ===========*/
 
     DEFAULT_PG_INPUT_OPTIONS(options);
@@ -238,8 +257,8 @@ int main(int argc, char *argv[]) {
     while((graph = read_and_decode_planar_code(stdin, &options))){
         graph_count++;
         for (int i = 0; i < graph->nv; ++i) {
-            if(graph->degree[i] != 5){
-                fprintf(stderr, "Not a quintic graph -- exiting!\n");
+            if(graph->degree[i] != k){
+                fprintf(stderr, "Not a %s graph -- exiting!\n", names[k-3]);
                 exit(EXIT_FAILURE);
             }
         }
