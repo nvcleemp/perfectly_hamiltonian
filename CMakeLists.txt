@@ -17,3 +17,12 @@ target_link_libraries (5reg_planar_no_cyclic_6_edge_cut planegraph)
 
 add_executable(5reg_planar_has_cyclic_7_edge_cut 5reg_planar_has_7_edge_cut.c)
 target_link_libraries (5reg_planar_has_cyclic_7_edge_cut planegraph)
+
+add_executable(reg_planar_all_colourings reg_planar_all_colourings.c)
+target_link_libraries (reg_planar_all_colourings planegraph cprogutil)
+
+add_executable(reg_planar_count_colourings reg_planar_count_colourings.c)
+target_link_libraries (reg_planar_count_colourings planegraph cprogutil)
+
+add_executable(reg_planar_vizing_class reg_planar_vizing_class.c)
+target_link_libraries (reg_planar_vizing_class planegraph cprogutil)
